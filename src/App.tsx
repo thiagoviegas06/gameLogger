@@ -1,0 +1,42 @@
+import { useState, useEffect } from 'react'
+import './App.css'
+import Account from './Account'
+
+function App() {
+  const [userData, setUserData] = useState<{
+    email: string;
+    username: string;
+    password: string;
+    passwordConfirmed: string;
+  } | null>(null);
+
+  const [submittedAccount, setSubmittedAccount] = useState(false);
+
+
+  function handleUserData(email: string, username: string, password: string, passwordConfirmed: string, submmission: boolean) {
+    setUserData({
+      email,
+      username,
+      password,
+      passwordConfirmed
+    });
+
+    setSubmittedAccount(submmission);
+
+    return void 0; // Explicitly return void to indicate no value is returned
+  }
+
+  useEffect(() => {
+    console.log("User Data Updated:");
+    if (submittedAccount && userData) {
+      // Here you can handle the submitted account data, e.g., send it to a server
+      console.log("Submitted Account Data:", userData);
+    }
+  },[userData]);
+
+  return (
+    <Account func={handleUserData} />
+    )
+}
+
+export default App
