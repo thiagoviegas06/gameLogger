@@ -1,6 +1,9 @@
-import { useState, useEffect } from 'react'
+
+import { useState, useEffect, JSX } from 'react'
 import './App.css'
 import Account from './Account'
+import Profile from './Profile';
+import AddForm from './AddForm';
 
 function App() {
   const [userData, setUserData] = useState<{
@@ -11,7 +14,10 @@ function App() {
   } | null>(null);
 
   const [submittedAccount, setSubmittedAccount] = useState(false);
-
+  const [currentHTML, setCurrentHTML] = useState<JSX.Element>(
+    <Account func={handleUserData} />
+  );
+  
 
   function handleUserData(email: string, username: string, password: string, passwordConfirmed: string, submmission: boolean) {
     setUserData({
@@ -31,11 +37,18 @@ function App() {
     if (submittedAccount && userData) {
       // Here you can handle the submitted account data, e.g., send it to a server
       console.log("Submitted Account Data:", userData);
+      setCurrentHTML(
+        <div>
+          <Profile username={userData.username} profilePicture="joel.webp" bio="This is a placeholder bio." />
+          <AddForm />
+        </div>
+      );
+      
     }
   },[userData]);
 
   return (
-    <Account func={handleUserData} />
+    currentHTML
     )
 }
 

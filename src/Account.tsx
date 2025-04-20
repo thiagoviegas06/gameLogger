@@ -51,7 +51,8 @@ function Account(AccountProps : AccountProps) {
     }
 
   return (
-    <div>
+    <div id="account-container">
+      
       <h1 id="title">Welcome to GameLog</h1>
       <form onSubmit={handleSubmit} id="form">
         <label>
