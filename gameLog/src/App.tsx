@@ -1,19 +1,14 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import Account from './Account'
+import Profile from './Profile';
+import AddForm from './AddForm';
 import axios from "axios";
 
 const backend = "http://localhost:8080/api";
-const send = "http://localhost:8080/api-sendUserData";
+const profileData = "http://localhost:8080/api/get-profile-data";
 
 function App() {
-  const [userData, setUserData] = useState<{
-    email: string;
-    username: string;
-    password: string;
-    create: boolean;
-  } | null>(null);
-
 
   const fetchAPI = async () => {
     const response = await axios.get(backend); 
@@ -24,50 +19,23 @@ function App() {
     fetchAPI();
   }, []);
 
+  let status = false;
 
-  async function sendUserData (){
-    try{
-      const response = await axios.post(send, userData);
-      console.log(response.data);
-    } catch(error){
-      console.log("send error");
-    }
-  }
-  
-  useEffect(() => {
-    //making sure it doesnt send when it is null
-    if(userData){
-      console.log(userData);
-      sendUserData();
-    }
-  }, [userData])
+  let currentHTML = <div>
+    <Account status/>
+  </div>; 
 
-  const [submittedAccount, setSubmittedAccount] = useState(false);
+  useEffect(()=>{
+    
+  }, [status]);
 
 
-  function handleUserData(email: string, username: string, password: string, create: boolean) {
-    setUserData({
-      email,
-      username,
-      password,
-      create
-    });
-
-    setSubmittedAccount(true);
-
-    return void 0; // Explicitly return void to indicate no value is returned
-  }
-
-  useEffect(() => {
-    console.log("User Data Updated:");
-    if (userData && submittedAccount) {
-      // Here you can handle the submitted account data, e.g., send it to a server
-      console.log("Submitted Account Data:", userData);
-    }
-  },[userData]);
+  let profileMenu = <div>
+    
+  </div>
 
   return (
-    <Account func={handleUserData} />
+      currentHTML
     )
 }
 

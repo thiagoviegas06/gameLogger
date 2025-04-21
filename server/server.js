@@ -17,22 +17,34 @@ app.get("/api", (req, res) =>{
     res.json({fruits: ["apple", "banana", "orange"]})
 });
 
-app.post("/api-sendUserData", (req, res) => {
-    const { email, username, password, passwordConfirmed } = req.body;
-  
-    console.log("Received user data:", { email, username });
+//make sure that email does not exist already ---> if not check username does not exist 
+app.post("/api-create", (req, res) => {
+    const { email, username, password } = req.body;
+    console.log("Received user data:", { email, username, password });
   
     // Simple check
-    if (!email || !username || !password || !passwordConfirmed) {
+    if (!email || !username || !password) {
+      return res.status(400).json({ error: "Missing fields" });
+    }
+
+    res.status(200).json({ response: ["ok"] });
+});
+
+
+// need to check database to see if user exists and password is correct 
+app.post("/api-login", (req, res) => {
+    const {username, password} = req.body;
+    console.log("Received user data:", { username, password });
+  
+    // Simple check
+    if (!username || !password) {
       return res.status(400).json({ error: "Missing fields" });
     }
   
     res.status(200).json({ response: ["ok"] });
 });
 
-app.post("/api-login", (req, res) => {
-
-});
+app.get("api")
   
 
 app.listen(port, () =>{
