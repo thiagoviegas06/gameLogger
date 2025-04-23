@@ -101,6 +101,7 @@ function Account({status}: accountProps) {
       };
       console.log("creating new account for user: ", username);
       const response = await axios.post(createAPI, newUser);
+      console.log("Account created");
       console.log(response.data);
       
     }catch(error){
@@ -117,6 +118,7 @@ function Account({status}: accountProps) {
       setShowCreateForm(false);
     }
   }
+
 
   useEffect(() => {
     if(showLoginForm || showCreateForm){
