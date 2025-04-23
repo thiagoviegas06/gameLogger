@@ -16,6 +16,7 @@ function Account({status}: accountProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmed, setPasswordConfirmed] = useState("");
+  const [hashedPass, setHashedPassword] = useState(""); 
   
   const messageRef = useRef<HTMLInputElement>(null);
   
@@ -36,15 +37,16 @@ function Account({status}: accountProps) {
                   messageRef.current.innerText = "Password must be at least 8 characters long!";
               }
           } else {
-              if (messageRef.current) {
-                  messageRef.current.innerText = "Password is valid!";
-                  hashPassword(password).then((hashedPass) => {
-                    setPassword(hashedPass);
-                  });
-                  createAccount().then(()=>{
-                    status = true;
-                  });
-              }
+            hashPassword(password).then((hashedPass) => {
+              setHashedPassword(hashedPass);
+            });
+            if (messageRef.current) {
+                messageRef.current.innerText = "Password is valid!";
+                
+                createAccount().then(()=>{
+                  status = true;
+                });
+            }
           }
       } else {
           if (messageRef.current) {
@@ -77,12 +79,12 @@ function Account({status}: accountProps) {
   async function sendLogInData(){
     try{
 
-      let hashedPass = await hashPassword(password)  
-      setPassword(hashedPass);
+      let hashedPass = await hashPassword(password);  
+      setHashedPassword(hashedPass);
     
       const userData = {
         username,
-        password
+        hashedPass
       };
       console.log("sending userData: ", username);
       
@@ -97,7 +99,7 @@ function Account({status}: accountProps) {
   async function createAccount(){
     try{
       const newUser = {
-        email, username, password
+        email, username, hashedPass
       };
       console.log("creating new account for user: ", username);
       const response = await axios.post(createAPI, newUser);
@@ -137,7 +139,9 @@ function Account({status}: accountProps) {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-    return hashHex;
+    console.log("hashed: ",hashHex);
+
+    return hashHex; 
   }
   
   

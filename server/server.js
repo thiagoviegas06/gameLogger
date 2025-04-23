@@ -1,13 +1,14 @@
 const express = require('express');
 const app = express();
 const { Pool } = require('pg');
+const { Resend } = require('resend');
 const port = 8080; 
 
 const env = require("./env.json");
 
 const cors = require('cors');
 const corsOptions = {
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:5174"],
 };
 
 app.use(cors(corsOptions)); 
@@ -72,21 +73,48 @@ app.post("/api-create", (req, res) => {
       return res.status(400).json({ error: "Missing fields" });
     }
 
-    const text = "INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3)";
-    const params = [email, username, password];
-    pool.query(text, params)
-        .then(result => {
-          console.log("Query result:", result);
-          console.log("User created:", result);
-          res.status(200).json({ response: ["ok"] });
-        })
-        .catch(err => {
+    const check = "SELECT 1 FROM users WHERE username = $1";
+    const checkParams = [username];
+
+    pool.query(check, checkParams)
+      .then(checkResult => {
+        if(checkResult.rowCount !== 0){
+          res.status(500).json({error: "User already exists"});
+        }
+        const text = "INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3)";
+        const params = [email, username, password];
+        pool.query(text, params)
+          .then(result => {
+            console.log("Query result:", result);
+            console.log("User created:", result);
+            res.status(200).json({ response: ["ok"] });
+          })
+          .catch(err => {
+            console.error("Error executing query", err.stack);
+            res.status(500).json({ error: "Internal server error" });
+          });
+        }).catch(err => {
           console.error("Error executing query", err.stack);
           res.status(500).json({ error: "Internal server error" });
         });
 
   }
 );
+
+
+//finish setting up user verification email
+async function sendUserVerificationEmail(){
+  const resend = new Resend('your_resend_api_key');
+
+  await resend.emails.send({
+    from: 'YourApp <you@yourdomain.com>',
+    to: 'user@example.com',
+    subject: 'Verify Your Email',
+    html: '<p>Click <a href="https://yourdomain.com/verify?token=abc123">here</a> to verify</p>',
+  });
+}
+
+
   
 
 app.listen(port, () =>{
