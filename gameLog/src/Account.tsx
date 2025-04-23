@@ -41,7 +41,9 @@ function Account({status}: accountProps) {
                   hashPassword(password).then((hashedPass) => {
                     setPassword(hashedPass);
                   });
-                  createAccount();
+                  createAccount().then(()=>{
+                    status = true;
+                  });
               }
           }
       } else {
@@ -66,7 +68,9 @@ function Account({status}: accountProps) {
 
   function loginSubmissionHandler(){
     console.log("User Logging in");
-    sendLogInData();
+    sendLogInData().then(()=>{
+      status = true;
+    });
     
   }
 
@@ -84,7 +88,7 @@ function Account({status}: accountProps) {
       
       const response = await axios.post(loginApi, userData);
       console.log(response.data);
-      status = true;
+      
     }catch(error){
       console.log("send error");
     }
@@ -98,7 +102,7 @@ function Account({status}: accountProps) {
       console.log("creating new account for user: ", username);
       const response = await axios.post(createAPI, newUser);
       console.log(response.data);
-      status = true;
+      
     }catch(error){
       console.log("send error, account was not created");
     }

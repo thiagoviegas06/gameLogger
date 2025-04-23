@@ -1,7 +1,9 @@
 const express = require('express');
 const app = express();
-const pool = require('pg'); 
+const { Pool } = require('pg');
 const port = 8080; 
+
+const env = require("./env.json");
 
 const cors = require('cors');
 const corsOptions = {
@@ -10,6 +12,16 @@ const corsOptions = {
 
 app.use(cors(corsOptions)); 
 app.use(express.json());  
+
+const pool = new Pool(env);
+pool.connect().then(function () {
+  console.log(`Connected to database ${env.database}`);
+});
+
+app.use((req, res, next) => {
+    console.log(`Request URL: ${req.url}`);
+    next();
+  });
 
 //api entry point
 
