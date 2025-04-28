@@ -5,6 +5,7 @@ const { Resend } = require('resend');
 const port = 8080; 
 
 const env = require("./env.json");
+const crypto = require('crypto');
 
 const cors = require('cors');
 const corsOptions = {
@@ -64,58 +65,107 @@ app.post("/api-login", (req, res) => {
   
 });
 
-app.post("/api-create", (req, res) => {
-    const { email, username, password } = req.body;
-    console.log("----- create =====Received user data:", { email, username, password });
-  
-    // Simple check
-    if (!email || !username || !password) {
-      return res.status(400).json({ error: "Missing fields" });
-    }
+app.post("/api-create", async (req, res) => {
+  const { email, username, password } = req.body;
+  console.log("----- create =====Received user data:", { email, username, password });
 
+  if (!email || !username || !password) {
+    return res.status(400).json({ error: "Missing fields" });
+  }
+
+  try {
     const check = "SELECT 1 FROM users WHERE username = $1";
     const checkParams = [username];
+    const checkResult = await pool.query(check, checkParams);
 
-    pool.query(check, checkParams)
-      .then(checkResult => {
-        if(checkResult.rowCount !== 0){
-          res.status(500).json({error: "User already exists"});
-        }
-        const text = "INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3)";
-        const params = [email, username, password];
-        pool.query(text, params)
-          .then(result => {
-            console.log("Query result:", result);
-            console.log("User created:", result);
-            res.status(200).json({ response: ["ok"] });
-          })
-          .catch(err => {
-            console.error("Error executing query", err.stack);
-            res.status(500).json({ error: "Internal server error" });
-          });
-        }).catch(err => {
-          console.error("Error executing query", err.stack);
-          res.status(500).json({ error: "Internal server error" });
-        });
+    if (checkResult.rowCount !== 0) {
+      return res.status(500).json({ error: "User already exists" });
+    }
 
+    const text = "INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3) RETURNING user_id";
+    const params = [email, username, password];
+    const result = await pool.query(text, params);
+
+    console.log("Query result:", result);
+    console.log("User created:", result);
+
+    const user_id = result.rows[0].user_id;
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+
+    const status = await insertIntoVerify(user_id, verificationToken);
+
+    if (status) {
+      let verify = `http://localhost:8080/verify?token=${verificationToken}`;
+      await sendUserVerificationEmail(email, verify);
+
+      res.status(200).json({
+        response: ["ok"],
+      });
+    } else {
+      res.status(500).json({ error: "Verification DB error" });
+    }
+
+  } catch (err) {
+    console.error("Error executing query", err.stack);
+    res.status(500).json({ error: "Internal server error" });
   }
-);
+});
 
+async function insertIntoVerify(user_id, token) {
+  const verifyText = 'INSERT INTO verifications (user_id, verification_token) VALUES ($1, $2)';
+  const parameters = [user_id, token];
+  try {
+    await pool.query(verifyText, parameters);
 
-//finish setting up user verification email
-async function sendUserVerificationEmail(){
-  const resend = new Resend('your_resend_api_key');
-
-  await resend.emails.send({
-    from: 'YourApp <you@yourdomain.com>',
-    to: 'user@example.com',
-    subject: 'Verify Your Email',
-    html: '<p>Click <a href="https://yourdomain.com/verify?token=abc123">here</a> to verify</p>',
-  });
+    return true;
+  } catch (err) {
+    console.error("Error inserting verification token", err.stack);
+    return false;
+  }
 }
 
+async function sendUserVerificationEmail(email, link) {
+  const resend = new Resend('your_resend_api_key');
+  try {
+    await resend.emails.send({
+      from: 'GameLogger <gameloggerverify@gmail.com>',
+      to: email,
+      subject: 'Verify Your Email',
+      html: `<p>Click <a href="${link}">here</a> to verify your account!</p>`,
+    });
+  } catch (err) {
+    console.error("Error sending verification email:", err);
+    throw new Error('Failed to send verification email.');
+  }
+}
+
+app.post("/api-set-up-profile", (req, res) => {
+
+})
+
+app.get("/verify", (req,res) => {
+  const token = req.query.token;
+  const text = "SELECT * FROM verifications WHERE verification_token = $1";
+  let content;
 
   
+  pool.query(text, [token])
+  .then( (result) => {
+    if(result.rowCount === 0){
+      content = <div>
+        <h1>User already verified or user does not exist</h1>
+      </div>
+    }else{
+      //now I need to update 
+    }
+  })
+    
+  
+
+  
+});
+
+
 
 app.listen(port, () =>{
     console.log("Server started on port 8080");

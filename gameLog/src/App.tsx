@@ -3,6 +3,7 @@ import './App.css'
 import Account from './Account'
 import Profile from './Profile';
 import AddForm from './AddForm';
+import CreateProfile from './CreateProfile';
 import axios from "axios";
 
 const backend = "http://localhost:8080/api";
@@ -20,12 +21,19 @@ function App() {
   }, []);
 
   let status = false;
+  let create = false;
 
   let currentHTML = <div>
-    <Account status/>
+    <Account status create/>
   </div>; 
 
   useEffect(()=>{
+
+    if(create){
+      currentHTML = <div>
+        <CreateProfile></CreateProfile>
+      </div>
+    }
     
   }, [status]);
 

@@ -7,10 +7,11 @@ const loginApi = "http://localhost:8080/api-login";
 const createAPI = "http://localhost:8080/api-create";
 
 interface accountProps{
-  status: boolean;
+  status: boolean; 
+  create: boolean; 
 }
 
-function Account({status}: accountProps) {
+function Account({status, create}: accountProps) {
 
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -45,6 +46,7 @@ function Account({status}: accountProps) {
                 
                 createAccount().then(()=>{
                   status = true;
+                  create = true;
                 });
             }
           }
@@ -72,6 +74,7 @@ function Account({status}: accountProps) {
     console.log("User Logging in");
     sendLogInData().then(()=>{
       status = true;
+      create = false;
     });
     
   }

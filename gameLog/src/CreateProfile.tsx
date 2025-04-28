@@ -3,6 +3,8 @@ import axios from "axios";
 
 const profileSetUp = "http://localhost:8080/api-set-up-profile";
 
+
+
 function CreateProfile() {
     const [bio, setBio] = useState("");
     const [profilePic, setProfilePic] = useState<File | null>(null);
