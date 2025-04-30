@@ -1,50 +1,36 @@
-import { useState, useEffect } from 'react'
-import './App.css'
-import Account from './Account'
-import Profile from './Profile';
-import AddForm from './AddForm';
-import CreateProfile from './CreateProfile';
-import axios from "axios";
+import { useState } from "react";
+import "./App.css";
+import Account from "./Account";
+/*
+import Profile from "./Profile";
+import AddForm from "./AddForm";
+import CreateProfile from "./CreateProfile";
+import axios from "axios"; */ 
 
 const backend = "http://localhost:8080/api";
-const profileData = "http://localhost:8080/api/get-profile-data";
 
 function App() {
+  const [status, setStatus] = useState(false);
+  const [create, setCreate] = useState(false);
+  const [username, setUsernameMain] = useState("");
 
-  const fetchAPI = async () => {
-    const response = await axios.get(backend); 
-    console.log(response.data.fruits);
-  }
+  let currentHTML;
 
-  useEffect(()=>{
-    fetchAPI();
-  }, []);
+  
+  currentHTML = (
+    <Account 
+      setStatus={setStatus} 
+      setCreate={setCreate} 
+      setUsernameMain={setUsernameMain}
+    />
+  );
+   /*else if (create) {
+    currentHTML = <CreateProfile />;
+  } else {
+    currentHTML = <Profile />;
+  } */
 
-  let status = false;
-  let create = false;
-
-  let currentHTML = <div>
-    <Account status create/>
-  </div>; 
-
-  useEffect(()=>{
-
-    if(create){
-      currentHTML = <div>
-        <CreateProfile></CreateProfile>
-      </div>
-    }
-    
-  }, [status]);
-
-
-  let profileMenu = <div>
-    
-  </div>
-
-  return (
-      currentHTML
-    )
+  return currentHTML;
 }
 
-export default App
+export default App;

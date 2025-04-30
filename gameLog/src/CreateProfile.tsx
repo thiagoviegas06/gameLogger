@@ -3,9 +3,12 @@ import axios from "axios";
 
 const profileSetUp = "http://localhost:8080/api-set-up-profile";
 
+interface createProps{
+    username: string;
+    ready: boolean;
+}
 
-
-function CreateProfile() {
+function CreateProfile({username, ready}: createProps) {
     const [bio, setBio] = useState("");
     const [profilePic, setProfilePic] = useState<File | null>(null);
     const [backgroundPic, setBackgroundPic] = useState<File | null>(null);
@@ -13,6 +16,7 @@ function CreateProfile() {
 
     async function formSubmissionHandler() {
         const formData = new FormData();
+        formData.append("username", username);
         formData.append("bio", bio);
         if (profilePic) formData.append("profilePic", profilePic);
         if (backgroundPic) formData.append("backgroundPic", backgroundPic);

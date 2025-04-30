@@ -1,20 +1,21 @@
-import React, { useEffect } from "react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import "./Account.css"; 
 import axios from "axios";
+
 
 const loginApi = "http://localhost:8080/api-login";
 const createAPI = "http://localhost:8080/api-create";
 
-interface accountProps{
-  status: boolean; 
-  create: boolean; 
-}
+type AccountProps = {
+  setStatus: (val: boolean) => void;
+  setCreate: (val: boolean) => void;
+  setUsernameMain: (val: string) => void;
+};
 
-function Account({status, create}: accountProps) {
 
+function Account({setStatus, setCreate, setUsernameMain}: AccountProps) {
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
+  const [username, setUsernameLocal] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmed, setPasswordConfirmed] = useState("");
   const [hashedPass, setHashedPassword] = useState(""); 
@@ -40,13 +41,15 @@ function Account({status, create}: accountProps) {
           } else {
             hashPassword(password).then((hashedPass) => {
               setHashedPassword(hashedPass);
+              console.log(hashedPass);
             });
             if (messageRef.current) {
-                messageRef.current.innerText = "Password is valid!";
+                messageRef.current.innerText = "Password is valid! Please check your email and verify your account";
                 
                 createAccount().then(()=>{
-                  status = true;
-                  create = true;
+                  setStatus (true);
+                  setCreate(true);
+                  setUsernameMain(username);
                 });
             }
           }
@@ -73,8 +76,9 @@ function Account({status, create}: accountProps) {
   function loginSubmissionHandler(){
     console.log("User Logging in");
     sendLogInData().then(()=>{
-      status = true;
-      create = false;
+      setStatus(true);
+      setCreate(false);
+      setUsernameMain(username);
     });
     
   }
@@ -102,11 +106,13 @@ function Account({status, create}: accountProps) {
   async function createAccount(){
     try{
       const newUser = {
-        email, username, hashedPass
+        'email': email,
+        'username': username,
+        'password': hashedPass
       };
-      console.log("creating new account for user: ", username);
+      console.log("creating new account for user: ", newUser);
       const response = await axios.post(createAPI, newUser);
-      console.log("Account created");
+      console.log("Account created, please verify yout account");
       console.log(response.data);
       
     }catch(error){
@@ -149,7 +155,7 @@ function Account({status, create}: accountProps) {
   
   
 return (
-  <div>
+  <div className="account-container">
     <h1 id="title">{titleOfPage}</h1>
     {showButtons && 
     <div id ="buttons">
@@ -172,7 +178,7 @@ return (
           <br />
           <label>
             Username:
-            <input type="text" name="username" value={username} onChange={(e) => setUsername(e.target.value)}/>
+            <input type="text" name="username" value={username} onChange={(e) => setUsernameLocal(e.target.value)}/>
           </label>
           <br />
           <label>
@@ -197,7 +203,7 @@ return (
       <form className="form">
         <label>
           Username:
-          <input type="text" name="username" value={username} onChange={(e) => setUsername(e.target.value)}/>
+          <input type="text" name="username" value={username} onChange={(e) => setUsernameLocal(e.target.value)}/>
         </label>
         <br />
         <label>

@@ -9,7 +9,7 @@ const crypto = require('crypto');
 
 const cors = require('cors');
 const corsOptions = {
-    origin: ["http://localhost:5174"],
+    origin: ["http://localhost:5173"],
 };
 
 app.use(cors(corsOptions)); 
@@ -67,7 +67,7 @@ app.post("/api-login", (req, res) => {
 
 app.post("/api-create", async (req, res) => {
   const { email, username, password } = req.body;
-  console.log("----- create =====Received user data:", { email, username, password });
+  console.log("----- create ===== Received user data:", { email, username, password });
 
   if (!email || !username || !password) {
     return res.status(400).json({ error: "Missing fields" });
@@ -85,9 +85,6 @@ app.post("/api-create", async (req, res) => {
     const text = "INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3) RETURNING user_id";
     const params = [email, username, password];
     const result = await pool.query(text, params);
-
-    console.log("Query result:", result);
-    console.log("User created:", result);
 
     const user_id = result.rows[0].user_id;
     const verificationToken = crypto.randomBytes(32).toString('hex');
@@ -116,6 +113,7 @@ async function insertIntoVerify(user_id, token) {
   const parameters = [user_id, token];
   try {
     await pool.query(verifyText, parameters);
+    console.log("insertion into verify made");
 
     return true;
   } catch (err) {
@@ -133,6 +131,7 @@ async function sendUserVerificationEmail(email, link) {
       subject: 'Verify Your Email',
       html: `<p>Click <a href="${link}">here</a> to verify your account!</p>`,
     });
+    console.log("email sent"); 
   } catch (err) {
     console.error("Error sending verification email:", err);
     throw new Error('Failed to send verification email.');
@@ -141,29 +140,51 @@ async function sendUserVerificationEmail(email, link) {
 
 app.post("/api-set-up-profile", (req, res) => {
 
-})
+});
 
-app.get("/verify", (req,res) => {
+app.get("/verify", async (req, res) => {
   const token = req.query.token;
   const text = "SELECT * FROM verifications WHERE verification_token = $1";
-  let content;
 
-  
-  pool.query(text, [token])
-  .then( (result) => {
-    if(result.rowCount === 0){
-      content = <div>
-        <h1>User already verified or user does not exist</h1>
-      </div>
-    }else{
-      //now I need to update 
+  try {
+    const result = await pool.query(text, [token]);
+
+    if (result.rowCount === 0) {
+      return res.send(`
+        <div>
+          <h1>User already verified or user does not exist</h1>
+        </div>
+      `);
     }
-  })
-    
-  
 
-  
+    const userID = result.rows[0].user_id;
+
+    await userVerified(token, userID);
+
+    return res.send(`
+      <div>
+        <h1>Email verified successfully!</h1>
+      </div>
+    `);
+
+  } catch (err) {
+    console.error("Verification error:", err);
+    return res.status(500).send(`
+      <div>
+        <h1>Internal server error during verification.</h1>
+      </div>
+    `);
+  }
 });
+
+async function userVerified(token, userID) {
+  const deleteQuery = "DELETE FROM verifications WHERE verification_token = $1";
+  const updateQuery = "UPDATE users SET verified = TRUE WHERE user_id = $1";
+
+  await pool.query(deleteQuery, [token]);
+  await pool.query(updateQuery, [userID]);
+}
+
 
 
 
